@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://collabhire-production.up.railway.app/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,16 +20,6 @@ export const collabhireAPI = {
   scoreCandidate: (jobDescription, candidateProfile, recruiterType = 'internal') =>
     api.post('/score-candidate', { jobDescription, candidateProfile, recruiterType }),
 
-  scoreCandidateWithFile: (jobDescription, file, recruiterType = 'internal') => {
-    const formData = new FormData();
-    formData.append('jobDescription', jobDescription);
-    formData.append('candidateFile', file);
-    formData.append('recruiterType', recruiterType);
-    return api.post('/score-candidate', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-
   generateOutreach: (data, recruiterType = 'internal') =>
     api.post('/generate-outreach', { ...data, recruiterType }),
 
@@ -44,18 +34,6 @@ export const collabhireAPI = {
 
   analyzeCareerPath: (data, recruiterType = 'internal') =>
     api.post('/skillpath', { ...data, recruiterType }),
-
-  analyzeCareerPathWithFile: (employeeName, currentRole, file, careerGoals, recruiterType = 'internal') => {
-    const formData = new FormData();
-    formData.append('employeeName', employeeName);
-    formData.append('currentRole', currentRole);
-    formData.append('employeeFile', file);
-    if (careerGoals) formData.append('careerGoals', careerGoals);
-    formData.append('recruiterType', recruiterType);
-    return api.post('/skillpath', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
 };
 
 export default api;
