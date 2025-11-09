@@ -1,0 +1,18 @@
+
+> collabhire-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+
+╔════════════════════════════════════════╗
+║     CollabHire Backend Running         ║
+╠════════════════════════════════════════╣
+║  Port: 5000                            ║
+║  Status: ✅ Active                     ║
+║  API: http://localhost:5000/api      ║
+╚════════════════════════════════════════╝
+  

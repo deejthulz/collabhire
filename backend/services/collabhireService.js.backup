@@ -1,0 +1,258 @@
+const OpenAI = require('openai');
+const { COLLABHIRE_SYSTEM_PROMPT } = require('../config/systemPrompt');
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+class CollabHireService {
+  
+  /**
+   * Main chat completion function
+   */
+  async chat(messages, options = {}) {
+    try {
+      // Replace {recruiterType} in system prompt with actual type
+      const recruiterType = options.recruiterType || 'internal';
+      const systemPrompt = COLLABHIRE_SYSTEM_PROMPT.replace(
+        '{recruiterType}',
+        recruiterType
+      );
+
+      const completion = await openai.chat.completions.create({
+        model: options.model || 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages
+        ],
+        temperature: options.temperature || 0.7,
+        max_tokens: options.maxTokens || 2000,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1
+      });
+
+      return {
+        success: true,
+        content: completion.choices[0].message.content,
+        usage: completion.usage,
+        model: completion.model
+      };
+    } catch (error) {
+      console.error('CollabHire AI Error:', error);
+      return {
+        success: false,
+        error: error.message,
+        content: "I'm experiencing technical difficulties. Please check your OpenAI API key is valid and has credits available."
+      };
+    }
+  }
+
+  /**
+   * Generate Boolean Search Strings - Only for selected platforms
+   */
+  async generateSearchStrings(data) {
+    const { jobTitle, location, skills, platforms, recruiterType } = data;
+    
+    const platformsList = platforms && platforms.length > 0 
+      ? platforms.join(', ') 
+      : 'LinkedIn';
+    
+    const userPrompt = `Create Boolean search strings to find: ${jobTitle} with skills in ${skills.join(', ')} located in ${location}.
+
+CRITICAL INSTRUCTIONS:
+- Generate search strings for ONLY these platforms: ${platformsList}
+- DO NOT include any other platforms
+- Keep each platform's output completely separate
+- Use clear headers for each platform
+- Make strings copy-paste ready
+
+Format:
+### [Platform Name] Boolean Search
+[search string here]
+[brief usage instructions]
+
+Only include platforms from this list: ${platformsList}`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+
+  /**
+   * Score Candidate - Strict and realistic assessment
+   */
+  async scoreCandidate(data) {
+    const { jobDescription, candidateProfile, recruiterType } = data;
+    
+    const userPrompt = `Score this candidate against the job description. Be BRUTALLY HONEST and REALISTIC.
+
+Job Description:
+${jobDescription}
+
+Candidate Profile:
+${candidateProfile}
+
+SCORING RULES:
+- If the candidate lacks the core required skills, score 1-2/5
+- If it's a complete mismatch (e.g., HR person for technical role), score 1/5
+- Be honest about red flags (job hopping, career regression, skill gaps)
+- Only score 4-5/5 if they genuinely exceed requirements
+
+Provide:
+1. Overall Score (/5)
+2. Skills Match Analysis
+3. Experience Relevance
+4. Red Flags (if any)
+5. Interview Priority (Low/Medium/High)
+6. Recommendation (Pass/Maybe/Interview/Strong Yes)`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+
+  /**
+   * Generate Outreach Message
+   */
+  async generateOutreach(data) {
+    const { candidateInfo, jobTitle, companyInfo, tone, recruiterType } = data;
+    
+    const userPrompt = `Create a high-converting outreach message for this scenario:
+
+Candidate: ${candidateInfo}
+Role: ${jobTitle}
+Company: ${companyInfo || 'Confidential'}
+Tone: ${tone || 'Professional'}
+
+Requirements:
+- Personalised to the candidate's background
+- Highlights why this role is compelling
+- Clear call-to-action
+- 50-70% response rate optimised
+- Include 2 variations for A/B testing
+- Best time to send: Tuesday-Thursday, 9-11am AEST`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+
+  /**
+   * Generate Screening Questions
+   */
+  async generateQuestions(data) {
+    const { jobTitle, keySkills, experienceLevel, recruiterType } = data;
+    
+    const userPrompt = `Create screening questions for: ${jobTitle}
+Key skills to assess: ${keySkills.join(', ')}
+Experience level: ${experienceLevel}
+
+Provide:
+1. 5-7 behavioural questions
+2. 3-5 technical questions (if applicable)
+3. Scoring rubric (1-5 scale)
+4. Red flag indicators to watch for`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+
+  /**
+   * Market Insights
+   */
+  async getMarketInsights(data) {
+    const { jobTitle, location, recruiterType } = data;
+    
+    const userPrompt = `Provide market insights for: ${jobTitle} in ${location}
+
+Include:
+1. Typical salary range (mark as ESTIMATE)
+2. Current demand level (High/Medium/Low)
+3. Skills in shortage
+4. Time-to-fill benchmark
+5. Competitor companies hiring for this role
+6. Sourcing strategies
+
+Mark all data as estimates and include sources where possible.`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+
+  /**
+   * Generate Pipeline Tracker Template
+   */
+  async generatePipelineTracker(data) {
+    const { jobTitle, recruiterType } = data;
+    
+    const userPrompt = `Create a pipeline tracking template for: ${jobTitle}
+
+Include:
+1. Key stages (Sourced → Screened → Interviewed → Offered → Hired)
+2. KPIs to track at each stage
+3. Conversion rate benchmarks
+4. Copy-paste ready table format for Excel/Google Sheets`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+}
+
+module.exports = new CollabHireService();
+
+  /**
+   * SkillPath - Internal Career Mobility Analysis
+   */
+  async analyzeCareerPath(data) {
+    const { employeeName, currentRole, employeeProfile, careerGoals, recruiterType } = data;
+    
+    const userPrompt = `Analyze career mobility opportunities for this employee:
+
+**Employee:** ${employeeName}
+**Current Role:** ${currentRole}
+**Skills & Experience:**
+${employeeProfile}
+${careerGoals ? `**Career Goals:** ${careerGoals}` : ''}
+
+Provide a comprehensive SkillPath analysis:
+
+## 1. Current Skill Assessment
+- List their key strengths and skills
+- Rate their current skill level in each area
+
+## 2. Suggested Internal Career Paths (3-4 realistic next roles)
+For each suggested role:
+- Role title
+- Why they're a good fit
+- Probability of success (Low/Medium/High)
+- Typical timeline to transition
+
+## 3. Skill Gap Analysis
+For each suggested role, identify:
+- Missing skills (must-have)
+- Skills to strengthen (nice-to-have)
+- Experience gaps
+
+## 4. 90-Day Development Plan
+Create a practical plan:
+- **Month 1:** Immediate actions (courses, shadowing, projects)
+- **Month 2:** Skill building activities
+- **Month 3:** Practice and application
+
+## 5. Retention Strategy
+- Why this career path keeps them engaged
+- Key motivators to highlight in career conversations
+- Red flags if they don't see growth
+
+**Format:** Use clear headers, bullet points, and be realistic about timeframes. Focus on INTERNAL mobility - these are roles within the same organisation.`;
+
+    return await this.chat([
+      { role: 'user', content: userPrompt }
+    ], { recruiterType });
+  }
+}
+
+module.exports = new CollabHireService();
