@@ -6,9 +6,10 @@ import {
 import Sidebar from './Sidebar';
 import ChatPanel from './ChatPanel';
 import SmartTools from './SmartTools';
+import Paywall from './Paywall';
 
 function Dashboard() {
-  const recruiterType = 'internal'; // Fixed as internal
+  const recruiterType = 'internal';
   const [activeTool, setActiveTool] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messages, setMessages] = useState([
@@ -69,6 +70,8 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Paywall />
+      
       <div 
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
