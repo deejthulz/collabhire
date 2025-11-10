@@ -32,7 +32,7 @@ function Paywall() {
   };
 
   const handleSubscribe = () => {
-    window.open('https://buy.stripe.com/YOUR_STRIPE_LINK_HERE', '_blank');
+    window.open('https://buy.stripe.com/9B69AS0VHeeVfDo7Et7ss04', '_blank');
   };
 
   if (!isTrialExpired) {
@@ -55,7 +55,7 @@ function Paywall() {
         </p>
 
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <div className="text-3xl font-bold text-gray-900 mb-1">$29</div>
+          <div className="text-3xl font-bold text-gray-900 mb-1">$9.99 AUD</div>
           <div className="text-sm text-gray-500">per month</div>
           <ul className="mt-4 space-y-2 text-left text-sm text-gray-700">
             <li className="flex items-center gap-2">
