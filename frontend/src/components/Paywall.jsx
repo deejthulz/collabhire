@@ -6,12 +6,26 @@ function Paywall() {
   const [daysRemaining, setDaysRemaining] = useState(null);
 
   useEffect(() => {
+    checkAdminAccess();
     checkTrialStatus();
     const interval = setInterval(checkTrialStatus, 60000);
     return () => clearInterval(interval);
   }, []);
 
+  const checkAdminAccess = () => {
+    const adminAccess = localStorage.getItem('collabhire_admin_access');
+    if (adminAccess === 'collabpathways2025') {
+      return true;
+    }
+    return false;
+  };
+
   const checkTrialStatus = () => {
+    if (checkAdminAccess()) {
+      setIsTrialExpired(false);
+      return;
+    }
+
     const TRIAL_DAYS = 90;
     const trialStartDate = localStorage.getItem('collabhire_trial_start');
     
@@ -28,6 +42,18 @@ function Paywall() {
       
       setDaysRemaining(remaining);
       setIsTrialExpired(remaining <= 0);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    const password = prompt('Enter admin password:');
+    if (password === 'collabpathways2025') {
+      localStorage.setItem('collabhire_admin_access', 'collabpathways2025');
+      setIsTrialExpired(false);
+      alert('Admin access granted!');
+      window.location.reload();
+    } else {
+      alert('Incorrect password');
     }
   };
 
@@ -80,9 +106,16 @@ function Paywall() {
           Subscribe Now
         </button>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 mb-3">
           Cancel anytime. No hidden fees.
         </p>
+
+        <button
+          onClick={handleAdminLogin}
+          className="text-xs text-gray-400 hover:text-gray-600 underline"
+        >
+          Admin Access
+        </button>
       </div>
     </div>
   );
